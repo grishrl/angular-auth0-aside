@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of, timer, Subscription } from 'rxjs';
+import { mergeMap } from 'rxjs/operators';
 import * as auth0 from 'auth0-js';
 import { environment } from './../../environments/environment';
 import { Router } from '@angular/router';
@@ -27,6 +28,9 @@ export class AuthService {
   onAuthSuccessUrl = '/';
   onAuthFailureUrl = '/';
   logoutUrl = environment.auth.LOGOUT_URL;
+  // Silent token renewal
+  refreshSub: Subscription;
+  private _expiresAt: number;
 
   // Create observable of Auth0 parseHash method to gather auth results
   parseHash$ = Observable.create(observer => {
@@ -73,14 +77,17 @@ export class AuthService {
   }
 
   private _setSession(authResult) {
+    this._expiresAt = authResult.expiresIn * 1000 + Date.now();
     // Emit values for auth observables
     this.tokenData$.next({
-      expiresAt: authResult.expiresIn * 1000 + Date.now(),
+      expiresAt: this._expiresAt,
       accessToken: authResult.accessToken
     });
     this.userProfile$.next(authResult.idTokenPayload);
     // Set flag in local storage stating this app is logged in
     localStorage.setItem(this._authFlag, JSON.stringify(true));
+    // Schedule silent auth renewal
+    this.scheduleRenewal();
   }
 
   get authenticated(): boolean {
@@ -94,6 +101,7 @@ export class AuthService {
         err => {
           localStorage.removeItem(this._authFlag);
           this.router.navigate([this.onAuthFailureUrl]);
+          this.unscheduleRenewal();
         }
       );
     }
@@ -116,6 +124,34 @@ export class AuthService {
       console.error(`Error: ${err.error_description}`);
     } else {
       console.error(`Error: ${JSON.stringify(err)}`);
+    }
+  }
+
+  scheduleRenewal() {
+    // If app doesn't think it's logged in, do nothing
+    if (!this.authenticated) { return; }
+    // Unsubscribe from previous expiration observable
+    this.unscheduleRenewal();
+    // Create and subscribe to expiration observable
+    const expiresIn$ = of(this._expiresAt).pipe(
+      mergeMap(
+        expires => {
+          const now = Date.now();
+          // Use timer to track delay until expiration
+          // to run the refresh at the proper time
+          return timer(Math.max(1, expires - now));
+        }
+      )
+    );
+
+    this.refreshSub = expiresIn$.subscribe(
+      () => this.renewAuth()
+    );
+  }
+
+  unscheduleRenewal() {
+    if (this.refreshSub) {
+      this.refreshSub.unsubscribe();
     }
   }
 
