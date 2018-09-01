@@ -11,10 +11,7 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class AuthGuard implements CanActivate {
 
-  constructor(
-    private auth: AuthService,
-    private router: Router
-  ) { }
+  constructor(private auth: AuthService) { }
 
   canActivate(
     next: ActivatedRouteSnapshot,
@@ -23,7 +20,8 @@ export class AuthGuard implements CanActivate {
     if (this.auth.authenticated) {
       return true;
     }
-    this.router.navigate([this.auth.onAuthFailureUrl]);
+    this.auth.storeAuthRedirect(state.url);
+    this.auth.login();
     return false;
   }
 

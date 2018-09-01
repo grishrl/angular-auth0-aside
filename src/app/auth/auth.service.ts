@@ -69,10 +69,22 @@ export class AuthService {
         authResult => {
           this._setSession(authResult);
           window.location.hash = '';
-          this.router.navigate([this.onAuthSuccessUrl]);
+          this._navigateAfterHashParse();
         },
-        err => this._handleError(err)
+        err => this._handleAuthError(err)
       )
+    }
+  }
+
+  // When trying to access a protected route,
+  // user will be prompted to log in
+  private _navigateAfterHashParse() {
+    const authRedirect = localStorage.getItem('authRedirect');
+    if (authRedirect) {
+      this.router.navigateByUrl(authRedirect);
+      localStorage.removeItem('authRedirect');
+    } else {
+      this.router.navigate([this.onAuthSuccessUrl]);
     }
   }
 
@@ -119,16 +131,19 @@ export class AuthService {
     });
   }
 
-  private _handleError(err) {
+  private _handleAuthError(err) {
     if (err.error_description) {
       console.error(`Error: ${err.error_description}`);
     } else {
       console.error(`Error: ${JSON.stringify(err)}`);
     }
+    this.router.navigate([this.onAuthFailureUrl]);
   }
 
+  // Silent auth renewal: schedule to renew
+  // auth if token expires during browser session
   scheduleRenewal() {
-    // If app doesn't think it's logged in, do nothing
+    // If app doesn't think user is authorized, do nothing
     if (!this.authenticated) { return; }
     // Unsubscribe from previous expiration observable
     this.unscheduleRenewal();
@@ -153,6 +168,10 @@ export class AuthService {
     if (this.refreshSub) {
       this.refreshSub.unsubscribe();
     }
+  }
+
+  storeAuthRedirect(url: string) {
+    localStorage.setItem('authRedirect', url);
   }
 
 }
