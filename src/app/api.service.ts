@@ -6,7 +6,7 @@ import { AuthService } from './auth/auth.service';
 
 @Injectable()
 export class ApiService {
-  private baseUrl = 'http://localhost:3001/api/';
+  private _baseUrl = 'http://localhost:3001/api/';
 
   constructor(
     private http: HttpClient,
@@ -15,7 +15,7 @@ export class ApiService {
 
   getDragons$(accessToken: string): Observable<any[]> {
     return this.http
-      .get<any[]>(`${this.baseUrl}dragons`, {
+      .get<any[]>(`${this._baseUrl}dragons`, {
         headers: new HttpHeaders().set(
           'Authorization', `Bearer ${accessToken}`
         )
