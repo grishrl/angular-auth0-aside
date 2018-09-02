@@ -72,7 +72,7 @@ export class AuthService {
           this._navigateAfterHashParse();
         },
         err => this._handleAuthError(err)
-      )
+      );
     }
   }
 

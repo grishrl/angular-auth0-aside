@@ -7,4 +7,4 @@ class TokenData {
   }
 }
 
-export { TokenData }
+export { TokenData };
