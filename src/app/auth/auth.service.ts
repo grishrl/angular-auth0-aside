@@ -57,6 +57,22 @@ export class AuthService {
     });
   });
 
+  // Create observable of token
+  token$ = Observable.create(observer => {
+    this.tokenData$.subscribe(
+      tokenData => {
+        if (tokenData.accessToken) {
+          observer.next(tokenData.accessToken);
+          observer.complete();
+        }
+      },
+      err => {
+        observer.error(err);
+        observer.complete();
+      }
+    )
+  });
+
   constructor(private router: Router) { }
 
   login() {
