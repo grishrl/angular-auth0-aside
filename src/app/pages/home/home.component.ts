@@ -32,9 +32,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private _getDragons() {
     // Subscribe to dragons API observable
     this.dragonsSub = this.api.getDragons$().subscribe(
-      data => {
-        this.dragons = data;
-      },
+      data => this.dragons = data,
       err => throwError(err)
     );
   }
