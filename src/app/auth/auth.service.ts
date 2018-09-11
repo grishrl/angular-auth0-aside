@@ -57,6 +57,24 @@ export class AuthService {
     });
   });
 
+  // Create observable of token
+  // This is important because it has an initial value
+  // and continues to emit values if the subject is
+  // updated; it is used for the token interceptor
+  token$ = Observable.create(observer => {
+    this.tokenData$.subscribe(
+      tokenData => {
+        if (tokenData.accessToken) {
+          observer.next(tokenData.accessToken);
+        }
+      },
+      err => {
+        observer.error(err);
+        observer.complete();
+      }
+    )
+  });
+
   constructor(private router: Router) { }
 
   login() {

@@ -12,12 +12,13 @@ export class InterceptorService implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    return this.auth.tokenData$
+    return this.auth.token$
       .pipe(
-        mergeMap(tokenData => {
-          if (tokenData.accessToken) {
+        mergeMap(token => {
+          console.log('hi', token);
+          if (token) {
             const tokenReq = req.clone({
-              setHeaders: { Authorization: `Bearer ${tokenData.accessToken}` }
+              setHeaders: { Authorization: `Bearer ${token}` }
             });
             return next.handle(tokenReq);
           }
