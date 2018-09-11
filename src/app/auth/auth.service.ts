@@ -83,7 +83,7 @@ export class AuthService {
     if (window.location.hash && !this.authenticated) {
       this.parseHash$.subscribe(
         authResult => {
-          this._setSession(authResult);
+          this._setAuth(authResult);
           window.location.hash = '';
           this._navigateAfterHashParse();
         },
@@ -104,7 +104,7 @@ export class AuthService {
     }
   }
 
-  private _setSession(authResult) {
+  private _setAuth(authResult) {
     this._expiresAt = authResult.expiresIn * 1000 + Date.now();
     // Emit values for auth observables
     this.tokenData$.next({
@@ -125,7 +125,7 @@ export class AuthService {
   renewAuth() {
     if (this.authenticated) {
       this.checkSession$.subscribe(
-        authResult => this._setSession(authResult),
+        authResult => this._setAuth(authResult),
         err => {
           localStorage.removeItem(this._authFlag);
           this.router.navigate([this.onAuthFailureUrl]);
