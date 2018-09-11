@@ -12,10 +12,13 @@ export class InterceptorService implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
+    // @NOTE: If you have some endpoints that are public
+    // and do not need Authorization header, implement logic
+    // here to accommodate that and conditionally let public
+    // requests pass through based on your requirements
     return this.auth.token$
       .pipe(
         mergeMap(token => {
-          console.log('hi', token);
           if (token) {
             const tokenReq = req.clone({
               setHeaders: { Authorization: `Bearer ${token}` }

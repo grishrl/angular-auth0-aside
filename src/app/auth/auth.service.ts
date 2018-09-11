@@ -22,8 +22,8 @@ export class AuthService {
   // Track whether or not to renew token
   private _authFlag = 'isLoggedIn';
   // Create streams for authentication data
-  tokenData$ = new BehaviorSubject(new TokenData());
-  userProfile$ = new BehaviorSubject(null);
+  tokenData$ = new BehaviorSubject<TokenData>(new TokenData());
+  userProfile$ = new BehaviorSubject<any>(null);
   // Authentication navigation
   onAuthSuccessUrl = '/';
   onAuthFailureUrl = '/';
@@ -58,9 +58,9 @@ export class AuthService {
   });
 
   // Create observable of token
-  // This is important because it has an initial value
-  // and continues to emit values if the subject is
-  // updated; it is used for the token interceptor
+  // This is important for the token interceptor
+  // which should receive a non-null initial value
+  // once the appropriate value is available
   token$ = Observable.create(observer => {
     this.tokenData$.subscribe(
       tokenData => {
