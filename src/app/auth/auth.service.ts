@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, timer, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, bindNodeCallback, of, timer, Subscription } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import * as auth0 from 'auth0-js';
 import { environment } from './../../environments/environment';
@@ -33,29 +33,11 @@ export class AuthService {
   private _expiresAt: number;
 
   // Create observable of Auth0 parseHash method to gather auth results
-  parseHash$ = Observable.create(observer => {
-    this._Auth0.parseHash((err, authResult) => {
-      if (err) {
-        observer.error(err);
-      } else if (authResult && authResult.accessToken) {
-        observer.next(authResult);
-      }
-      observer.complete();
-    });
-  });
+  parseHash$ = bindNodeCallback(this._Auth0.parseHash.bind(this._Auth0));
 
   // Create observable of Auth0 checkSession method to
   // verify authorization server session and renew tokens
-  checkSession$ = Observable.create(observer => {
-    this._Auth0.checkSession({}, (err, authResult) => {
-      if (err) {
-        observer.error(err);
-      } else if (authResult && authResult.accessToken) {
-        observer.next(authResult);
-      }
-      observer.complete();
-    });
-  });
+  checkSession$ = bindNodeCallback(this._Auth0.checkSession.bind(this._Auth0));
 
   // Create observable of token
   // This is important for the token interceptor
@@ -83,7 +65,7 @@ export class AuthService {
 
   handleLoginCallback() {
     if (window.location.hash && !this.authenticated) {
-      this.parseHash$.subscribe(
+      this.parseHash$().subscribe(
         authResult => {
           this._setAuth(authResult);
           window.location.hash = '';
@@ -126,7 +108,7 @@ export class AuthService {
 
   renewAuth() {
     if (this.authenticated) {
-      this.checkSession$.subscribe(
+      this.checkSession$({}).subscribe(
         authResult => this._setAuth(authResult),
         err => {
           localStorage.removeItem(this._authFlag);
