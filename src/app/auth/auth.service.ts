@@ -39,10 +39,10 @@ export class AuthService {
   // verify authorization server session and renew tokens
   checkSession$ = bindNodeCallback(this._Auth0.checkSession.bind(this._Auth0));
 
-  // Create observable of token
+  // Observable of token
   // This is important for the token interceptor
-  // which should receive a non-null initial value
-  // once the appropriate value is available
+  // which should receive a defined initial value;
+  // Declared when authResult becomes available
   token$: Observable<string>;
 
   constructor(private router: Router) { }
@@ -78,7 +78,7 @@ export class AuthService {
 
   private _setAuth(authResult) {
     this._expiresAt = authResult.expiresIn * 1000 + Date.now();
-    // Create observable of valid token
+    // Declare observable of valid token
     this.token$ = of(authResult.accessToken);
     // Emit values for auth data subjects
     this.tokenData$.next({
