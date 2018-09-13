@@ -4,7 +4,6 @@ import { mergeMap } from 'rxjs/operators';
 import * as auth0 from 'auth0-js';
 import { environment } from './../../environments/environment';
 import { Router } from '@angular/router';
-import { TokenData } from './tokendata.model';
 
 @Injectable()
 export class AuthService {
@@ -21,8 +20,9 @@ export class AuthService {
   });
   // Track whether or not to renew token
   private _authFlag = 'isLoggedIn';
-  // Create streams for authentication data
-  tokenData$ = new BehaviorSubject<TokenData>(new TokenData());
+  // Create stream for token
+  token$: Observable<string>;
+  // Create stream for user profile data
   userProfile$ = new BehaviorSubject<any>(null);
   // Authentication navigation
   onAuthSuccessUrl = '/';
@@ -31,19 +31,11 @@ export class AuthService {
   // Silent token renewal
   refreshSub: Subscription;
   private _expiresAt: number;
-
   // Create observable of Auth0 parseHash method to gather auth results
   parseHash$ = bindNodeCallback(this._Auth0.parseHash.bind(this._Auth0));
-
   // Create observable of Auth0 checkSession method to
   // verify authorization server session and renew tokens
   checkSession$ = bindNodeCallback(this._Auth0.checkSession.bind(this._Auth0));
-
-  // Observable of token
-  // This is important for the token interceptor
-  // which should receive a defined initial value;
-  // Declared when authResult becomes available
-  token$: Observable<string>;
 
   constructor(private router: Router) { }
 
@@ -78,13 +70,9 @@ export class AuthService {
 
   private _setAuth(authResult) {
     this._expiresAt = authResult.expiresIn * 1000 + Date.now();
-    // Declare observable of valid token
+    // Observable of token
     this.token$ = of(authResult.accessToken);
-    // Emit values for auth data subjects
-    this.tokenData$.next({
-      expiresAt: this._expiresAt,
-      accessToken: authResult.accessToken
-    });
+    // Emit value for user data subject
     this.userProfile$.next(authResult.idTokenPayload);
     // Set flag in local storage stating this app is logged in
     localStorage.setItem(this._authFlag, JSON.stringify(true));
