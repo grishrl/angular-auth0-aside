@@ -43,19 +43,7 @@ export class AuthService {
   // This is important for the token interceptor
   // which should receive a non-null initial value
   // once the appropriate value is available
-  token$ = Observable.create(observer => {
-    this.tokenData$.subscribe(
-      tokenData => {
-        if (tokenData.accessToken) {
-          observer.next(tokenData.accessToken);
-        }
-      },
-      err => {
-        observer.error(err);
-        observer.complete();
-      }
-    )
-  });
+  token$: Observable<string>;
 
   constructor(private router: Router) { }
 
@@ -90,7 +78,9 @@ export class AuthService {
 
   private _setAuth(authResult) {
     this._expiresAt = authResult.expiresIn * 1000 + Date.now();
-    // Emit values for auth observables
+    // Create observable of valid token
+    this.token$ = of(authResult.accessToken);
+    // Emit values for auth data subjects
     this.tokenData$.next({
       expiresAt: this._expiresAt,
       accessToken: authResult.accessToken
