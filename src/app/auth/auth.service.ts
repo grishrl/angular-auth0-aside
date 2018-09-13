@@ -10,7 +10,7 @@ import { TokenData } from './tokendata.model';
 export class AuthService {
   // Create Auth0 web auth instance
   // @TODO: Update environment variables and remove .example
-  //  extension in src/environments/environment.ts.example
+  // extension in src/environments/environment.ts.example
   private _Auth0 = new auth0.WebAuth({
     clientID: environment.auth.CLIENT_ID,
     domain: environment.auth.CLIENT_DOMAIN,
